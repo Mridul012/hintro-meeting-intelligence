@@ -6,8 +6,8 @@
     "description": "AI-powered meeting intelligence service that helps users manage meetings, extract actionable insights, and track follow-ups."
   },
   "servers": [
-    { "url": "http://localhost:3000", "description": "Local development" },
-    { "url": "https://placeholder.com", "description": "Production" }
+    { "url": "https://hintro-meeting-intelligence-production-d1bd.up.railway.app", "description": "Production" },
+    { "url": "http://localhost:3000", "description": "Local development" }
   ],
   "components": {
     "securitySchemes": {

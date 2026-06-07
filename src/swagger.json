@@ -1,0 +1,263 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Hintro Meeting Intelligence API",
+    "version": "1.0.0",
+    "description": "AI-powered meeting intelligence service that helps users manage meetings, extract actionable insights, and track follow-ups."
+  },
+  "servers": [
+    { "url": "http://localhost:3000", "description": "Local development" },
+    { "url": "https://placeholder.com", "description": "Production" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "TranscriptEntry": {
+        "type": "object",
+        "required": ["timestamp", "speaker", "text"],
+        "properties": {
+          "timestamp": { "type": "string", "example": "00:10" },
+          "speaker": { "type": "string", "example": "John" },
+          "text": { "type": "string", "example": "We should launch next Friday." }
+        }
+      },
+      "Citation": {
+        "type": "object",
+        "properties": { "timestamp": { "type": "string", "example": "00:10" } }
+      },
+      "Meeting": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "meetingDate": { "type": "string", "format": "date-time" },
+          "participants": { "type": "array", "items": { "type": "string" } },
+          "transcript": { "type": "array", "items": { "$ref": "#/components/schemas/TranscriptEntry" } },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ActionItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "meetingId": { "type": "string", "format": "uuid" },
+          "task": { "type": "string" },
+          "assignee": { "type": "string" },
+          "dueDate": { "type": "string", "format": "date-time", "nullable": true },
+          "status": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] },
+          "citations": { "type": "array", "items": { "$ref": "#/components/schemas/Citation" } }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "traceId": { "type": "string" },
+          "success": { "type": "boolean", "example": true },
+          "data": { "type": "object" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "traceId": { "type": "string" },
+          "success": { "type": "boolean", "example": false },
+          "error": {
+            "type": "object",
+            "properties": { "code": { "type": "string" }, "message": { "type": "string" } }
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Auth"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                  "password": { "type": "string", "minLength": 8, "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User registered successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } } },
+          "409": { "description": "Email already registered" },
+          "422": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login and get JWT token",
+        "tags": ["Auth"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful, returns JWT token" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/api/meetings": {
+      "post": {
+        "summary": "Create a new meeting with transcript",
+        "tags": ["Meetings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "participants", "meetingDate", "transcript"],
+                "properties": {
+                  "title": { "type": "string", "example": "Sprint Planning" },
+                  "participants": { "type": "array", "items": { "type": "string", "format": "email" } },
+                  "meetingDate": { "type": "string", "format": "date-time" },
+                  "transcript": { "type": "array", "items": { "$ref": "#/components/schemas/TranscriptEntry" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Meeting created" },
+          "422": { "description": "Validation error" }
+        }
+      },
+      "get": {
+        "summary": "List all meetings with pagination",
+        "tags": ["Meetings"],
+        "parameters": [
+          { "in": "query", "name": "page", "schema": { "type": "integer", "default": 1 } },
+          { "in": "query", "name": "limit", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": { "200": { "description": "Paginated list of meetings" } }
+      }
+    },
+    "/api/meetings/{id}": {
+      "get": {
+        "summary": "Get a meeting by ID",
+        "tags": ["Meetings"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Meeting details" },
+          "404": { "description": "Meeting not found" }
+        }
+      }
+    },
+    "/api/meetings/{id}/analyze": {
+      "post": {
+        "summary": "Analyze meeting transcript with AI",
+        "tags": ["Meetings"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "AI analysis with citations" },
+          "404": { "description": "Meeting not found" }
+        }
+      }
+    },
+    "/api/action-items": {
+      "post": {
+        "summary": "Create an action item",
+        "tags": ["Action Items"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["meetingId", "task", "assignee"],
+                "properties": {
+                  "meetingId": { "type": "string", "format": "uuid" },
+                  "task": { "type": "string", "example": "Prepare release notes" },
+                  "assignee": { "type": "string", "example": "Alice" },
+                  "dueDate": { "type": "string", "format": "date-time" },
+                  "citations": { "type": "array", "items": { "$ref": "#/components/schemas/Citation" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Action item created" } }
+      },
+      "get": {
+        "summary": "List action items with optional filters",
+        "tags": ["Action Items"],
+        "parameters": [
+          { "in": "query", "name": "status", "schema": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] } },
+          { "in": "query", "name": "assignee", "schema": { "type": "string" } },
+          { "in": "query", "name": "meetingId", "schema": { "type": "string", "format": "uuid" } },
+          { "in": "query", "name": "page", "schema": { "type": "integer", "default": 1 } },
+          { "in": "query", "name": "limit", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": { "200": { "description": "Filtered list of action items" } }
+      }
+    },
+    "/api/action-items/overdue": {
+      "get": {
+        "summary": "Get all overdue action items",
+        "tags": ["Action Items"],
+        "responses": { "200": { "description": "List of overdue action items" } }
+      }
+    },
+    "/api/action-items/{id}/status": {
+      "patch": {
+        "summary": "Update action item status",
+        "tags": ["Action Items"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status updated" },
+          "404": { "description": "Action item not found" }
+        }
+      }
+    }
+  }
+}

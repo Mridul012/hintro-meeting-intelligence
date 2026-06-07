@@ -7,7 +7,7 @@ import authRoutes from "./routes/auth.routes";
 import meetingsRoutes from "./routes/meetings.routes";
 import actionItemsRoutes from "./routes/actionItems.routes";
 import logger from "./utils/logger";
-import { swaggerSpec } from "./docs/swagger";
+import swaggerDocument from "./swagger.json";
 
 const app = express();
 
@@ -27,8 +27,8 @@ app.get("/health", (req, res) => {
   res.json({ traceId: req.traceId, success: true, data: { status: "UP" } });
 });
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get("/api-docs.json", (_req, res) => res.json(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get("/api-docs.json", (_req, res) => res.json(swaggerDocument));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/meetings", meetingsRoutes);

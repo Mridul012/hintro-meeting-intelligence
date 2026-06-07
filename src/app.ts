@@ -42,7 +42,7 @@ app.get("/api/evaluation", (req, res) => {
       candidateName: "Mridul",
       email: "iammridul012@gmail.com",
       repositoryUrl: "https://github.com/Mridul012/hintro-meeting-intelligence",
-      deployedUrl: "https://placeholder.com",
+      deployedUrl: "https://hintro-meeting-intelligence-production-d1bd.up.railway.app",
       externalIntegration: "Resend Email",
       features: [
         "Authentication",

@@ -43,9 +43,17 @@
     "zod": "^4.4.3"
   },
   "vitest": {
-    "include": ["src/__tests__/**/*.test.ts"],
-    "exclude": ["dist/**", "node_modules/**"],
+    "include": [
+      "src/__tests__/**/*.test.ts"
+    ],
+    "exclude": [
+      "dist/**",
+      "node_modules/**"
+    ],
     "environment": "node"
+  },
+  "overrides": {
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
